@@ -7,11 +7,12 @@ export interface WriteJsonOptions extends Deno.WriteFileOptions {
   space?: string | number
 }
 
-export const writeJson = async (
+/** Asynchronously writes an object to a JSON file */
+export async function writeJson(
   path: string | URL,
   data: any,
   options: WriteJsonOptions = {}
-): Promise<void> => {
+): Promise<void> {
   const { replacer, space, ...writeOptions } = options
   await Deno.writeTextFile(
     path,
@@ -20,11 +21,12 @@ export const writeJson = async (
   )
 }
 
-export const writeJsonSync = (
+/** Writes an object to a JSON file */
+export function writeJsonSync(
   path: string | URL,
   data: any,
   options: WriteJsonOptions = {}
-): void => {
+): void {
   const { replacer, space, ...writeOptions } = options
   Deno.writeTextFileSync(
     path,

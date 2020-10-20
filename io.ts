@@ -1,12 +1,25 @@
-import { osEOL } from './misc.ts'
-import { readStringDelim } from './deps.ts'
+import { BufReader } from './deps.ts'
 
-export const readLine = async (
+/** Reads a single line from a Reader, defaults to `Deno.stdin` */
+export async function readLine(
   reader: Deno.Reader = Deno.stdin
-): Promise<string> => (await readStringDelim(reader, osEOL).next()).value
+): Promise<string> {
+  const result = await new BufReader(reader).readLine()
+  return result ? new TextDecoder().decode(result.line) : ''
+}
 
-export const writeStdout = async (input: string) =>
-  Deno.stdout.write(new TextEncoder().encode(input))
+/** Asynchronously writes a string to a Writer, defaults to `Deno.stdout` */
+export async function writeString(
+  input: string,
+  writer: Deno.Writer = Deno.stdout
+): Promise<number> {
+  return writer.write(new TextEncoder().encode(input))
+}
 
-export const writeStdoutSync = (input: string) =>
-  Deno.stdout.writeSync(new TextEncoder().encode(input))
+/** Writes a string to a WriterSync, defaults to `Deno.stdout` */
+export function writeStringSync(
+  input: string,
+  writer: Deno.WriterSync = Deno.stdout
+): number {
+  return writer.writeSync(new TextEncoder().encode(input))
+}

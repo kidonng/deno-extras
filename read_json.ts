@@ -1,5 +1,9 @@
-export const readJson = async <T = unknown>(path: string | URL): Promise<T> =>
-  JSON.parse(await Deno.readTextFile(path))
+/** Asynchronously reads a JSON file and then parses it into an object */
+export async function readJson<T = unknown>(path: string | URL): Promise<T> {
+  return JSON.parse(await Deno.readTextFile(path))
+}
 
-export const readJsonSync = <T = unknown>(path: string | URL): T =>
-  JSON.parse(Deno.readTextFileSync(path))
+/** Reads a JSON file and then parses it into an object */
+export function readJsonSync<T = unknown>(path: string | URL): T {
+  return JSON.parse(Deno.readTextFileSync(path))
+}
