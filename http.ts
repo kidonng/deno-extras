@@ -1,17 +1,15 @@
-import { ServerRequest } from './deps.ts'
+import { ServerRequest, Response } from './deps.ts'
 
-export interface Response {
-  status?: number
-  headers?: Record<string, string>
-  body?: Uint8Array | Deno.Reader | string
+export interface ExtendedResponse
+  extends Pick<Response, 'status' | 'body' | 'trailers'> {
+  headers?: Headers | Record<string, string>
   json?: Record<string, string>
-  trailers?: () => Promise<Headers> | Headers
 }
 
 export interface RequestHelper {
   headers: Record<string, string>
   search: Record<string, string>
-  respond: (response: Response) => Promise<void>
+  respond: (response: ExtendedResponse) => Promise<void>
   redirect: (location: string, status?: number) => Promise<void>
 }
 
@@ -25,10 +23,11 @@ export function requestHelper(request: ServerRequest): RequestHelper {
   )
   const search = Object.fromEntries(searchParams.entries())
 
-  const respond = (response: Response): Promise<void> => {
+  const respond = (response: ExtendedResponse): Promise<void> => {
     const { status, headers: _headers, body, json, trailers } = response
 
-    const headers = new Headers(_headers)
+    const headers =
+      _headers instanceof Headers ? _headers : new Headers(_headers)
     if (json) headers.set('content-type', 'application/json; charset=utf-8')
 
     return request.respond({
