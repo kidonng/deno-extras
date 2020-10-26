@@ -2,8 +2,8 @@ import { ServerRequest, Response } from './deps.ts'
 
 export interface ExtendedResponse
   extends Pick<Response, 'status' | 'body' | 'trailers'> {
-  headers?: Headers | Record<string, string>
-  json?: Record<string, string>
+  headers?: HeadersInit
+  json?: unknown
 }
 
 /** Helpers for dealing with ordinary `ServerRequest` */
@@ -27,8 +27,7 @@ export class ExtendedRequest {
   respond = (response: ExtendedResponse): Promise<void> => {
     const { status, headers: _headers, body, json, trailers } = response
 
-    const headers =
-      _headers instanceof Headers ? _headers : new Headers(_headers)
+    const headers = new Headers(_headers)
     if (json) headers.set('content-type', 'application/json; charset=utf-8')
 
     return this.#request.respond({
