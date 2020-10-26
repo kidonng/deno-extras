@@ -12,6 +12,7 @@ export interface RequestHelper {
   headers: Record<string, string>
   search: Record<string, string>
   respond: (response: Response) => Promise<void>
+  redirect: (location: string, status?: number) => Promise<void>
 }
 
 /** Helpers for dealing with ordinary `ServerRequest` */
@@ -38,5 +39,15 @@ export function requestHelper(request: ServerRequest): RequestHelper {
     })
   }
 
-  return { headers, search, respond }
+  const redirect = (location: string, status: number = 308): Promise<void> => {
+    if (status < 300 || status > 399)
+      throw RangeError('Status code must be between 300 and 399')
+
+    return request.respond({
+      status,
+      headers: new Headers({ location }),
+    })
+  }
+
+  return { headers, search, respond, redirect }
 }
