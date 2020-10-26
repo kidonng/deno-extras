@@ -24,7 +24,7 @@ export class ExtendedRequest {
     this.search = Object.fromEntries(searchParams.entries())
   }
 
-  respond(response: ExtendedResponse): Promise<void> {
+  respond = (response: ExtendedResponse): Promise<void> => {
     const { status, headers: _headers, body, json, trailers } = response
 
     const headers =
@@ -39,7 +39,7 @@ export class ExtendedRequest {
     })
   }
 
-  redirect(location: string, status: number = 308): Promise<void> {
+  redirect = (location: string, status: number = 308): Promise<void> => {
     if (status < 300 || status > 399)
       throw RangeError('Status code must be between 300 and 399')
 
