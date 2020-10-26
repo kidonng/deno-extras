@@ -1,3 +1,4 @@
+export * from './fs.ts'
 export * from './io.ts'
 export * from './misc.ts'
 export * from './read_json.ts'
