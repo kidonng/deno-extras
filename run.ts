@@ -1,16 +1,55 @@
-export type RunOptions = Pick<Deno.RunOptions, 'cmd' | 'cwd' | 'env'>
+export interface RunOptions extends Omit<Deno.RunOptions, 'cmd'> {
+  shell?: string
+}
 
-/** Asynchronously runs a command and pipes to `Deno.stdout` */
-export async function run(
-  options: RunOptions | RunOptions['cmd']
-): Promise<void> {
-  const { stdout } = Deno.run({
-    ...(Array.isArray(options) ? { cmd: options } : options),
-    stdout: 'piped',
-  })
-  const iter = Deno.iter(stdout)
-
-  for await (const chunk of iter) {
-    Deno.stdout.writeSync(chunk)
+/**
+ * Deno.run with shortcuts
+ *
+ * ```ts
+ * const status1 = await run('echo', 'hello', 'world')
+ * console.log({ status1 })
+ *
+ * const status2 = await run(['echo', 'hello', 'world']).status()
+ * console.log({ status2 })
+ *
+ * const status3 = await run(['echo', '$HOME'], { shell: 'bash' }).status()
+ * console.log({ status3 })
+ * ```
+ *
+ * Output:
+ *
+ * ```
+ * hello world
+ * { status1: { success: true, code: 0 } }
+ * hello world
+ * { status2: { success: true, code: 0 } }
+ * /Users/kid
+ * { status3: { success: true, code: 0 } }
+ * ```
+ *  */
+export function run(
+  file: string | URL,
+  ...args: string[]
+): Promise<Deno.ProcessStatus>
+export function run<T extends RunOptions>(
+  cmd: Deno.RunOptions['cmd'],
+  opt?: T
+): Deno.Process<T & { cmd: Deno.RunOptions['cmd'] }>
+export function run<T extends RunOptions>(
+  fileOrCmd: string | URL | Deno.RunOptions['cmd'],
+  opt?: T,
+  ...args: string[]
+):
+  | Promise<Deno.ProcessStatus>
+  | Deno.Process<T & { cmd: Deno.RunOptions['cmd'] }> {
+  if (Array.isArray(fileOrCmd)) {
+    return Deno.run({
+      cmd: opt?.shell ? [opt.shell, '-c', fileOrCmd.join(' ')] : fileOrCmd,
+      ...opt,
+    })
+  } else {
+    return Deno.run({
+      cmd: [fileOrCmd, opt, ...args] as Deno.RunOptions['cmd'],
+    }).status()
   }
 }
