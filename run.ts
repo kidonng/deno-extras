@@ -1,55 +1,41 @@
-export interface RunOptions extends Omit<Deno.RunOptions, 'cmd'> {
-  shell?: string
+export type cmd = Deno.RunOptions['cmd']
+
+export function decode(input: BufferSource) {
+  return new TextDecoder().decode(input).trim()
 }
 
 /**
  * Deno.run with shortcuts
  *
  * ```ts
- * const status1 = await run('echo', 'hello', 'world')
- * console.log({ status1 })
- *
- * const status2 = await run(['echo', 'hello', 'world']).status()
- * console.log({ status2 })
- *
- * const status3 = await run(['echo', '$HOME'], { shell: 'bash' }).status()
- * console.log({ status3 })
+ * const { success, code, signal, rid, pid } = await run('echo', 'foo')
+ * const stdout = await run.stdout('echo', 'bar')
+ * const stderr = await run.stderr('echo', 'baz')
  * ```
- *
- * Output:
- *
- * ```
- * hello world
- * { status1: { success: true, code: 0 } }
- * hello world
- * { status2: { success: true, code: 0 } }
- * /Users/kid
- * { status3: { success: true, code: 0 } }
- * ```
- *  */
-export function run(
-  file: string | URL,
-  ...args: string[]
-): Promise<Deno.ProcessStatus>
-export function run<T extends RunOptions>(
-  cmd: Deno.RunOptions['cmd'],
-  opt?: T
-): Deno.Process<T & { cmd: Deno.RunOptions['cmd'] }>
-export function run<T extends RunOptions>(
-  fileOrCmd: string | URL | Deno.RunOptions['cmd'],
-  opt?: T,
-  ...args: string[]
-):
-  | Promise<Deno.ProcessStatus>
-  | Deno.Process<T & { cmd: Deno.RunOptions['cmd'] }> {
-  if (Array.isArray(fileOrCmd)) {
-    return Deno.run({
-      cmd: opt?.shell ? [opt.shell, '-c', fileOrCmd.join(' ')] : fileOrCmd,
-      ...opt,
-    })
-  } else {
-    return Deno.run({
-      cmd: [fileOrCmd, opt, ...args] as Deno.RunOptions['cmd'],
-    }).status()
-  }
+ */
+export async function run(...cmd: cmd) {
+  const process = Deno.run({ cmd })
+  const status = await process.status()
+  process.close()
+  return { ...process, ...status }
+}
+
+run.stdout = async function (...cmd: cmd) {
+  const process = Deno.run({
+    cmd,
+    stdout: 'piped',
+  })
+  const output = await process.output()
+  process.close()
+  return decode(output)
+}
+
+run.stderr = async function (...cmd: cmd) {
+  const process = Deno.run({
+    cmd,
+    stderr: 'piped',
+  })
+  const stderrOutput = await process.stderrOutput()
+  process.close()
+  return decode(stderrOutput)
 }
