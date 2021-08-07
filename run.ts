@@ -1,6 +1,6 @@
 export type cmd = Deno.RunOptions['cmd']
 
-export function decode(input: BufferSource) {
+function decode(input: BufferSource) {
   return new TextDecoder().decode(input).trim()
 }
 
